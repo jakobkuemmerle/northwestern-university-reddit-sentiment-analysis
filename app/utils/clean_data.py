@@ -81,3 +81,43 @@ def preprocess_text(text: str) -> str:
     lemmatizer = nltk.WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
     return ' '.join(tokens)
+
+
+
+
+# Linda added
+
+from nltk.corpus import wordnet
+from nltk.stem import WordNetLemmatizer
+
+# Download WordNet data if not already downloaded
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+
+def generate_similar_words(keyword):
+    
+    # Initialize WordNet Lemmatizer
+    lemmatizer = WordNetLemmatizer()
+    
+    # Find synonyms using WordNet
+    synonyms = set()
+    for syn in wordnet.synsets(keyword):
+        for lemma in syn.lemmas():
+            # Exclude compound words or phrases
+            if "_" not in lemma.name() and len(lemma.name().split()) == 1:
+                synonyms.add(lemma.name())
+    
+    # Generate morphological variations
+    variations = set([
+        keyword,  # Original word
+        lemmatizer.lemmatize(keyword, pos='n'),  # Lemma (noun)
+        lemmatizer.lemmatize(keyword, pos='v'),  # Lemma (verb)
+        lemmatizer.lemmatize(keyword, pos='a'),  # Lemma (adjective)
+        f"{keyword}s",  # Plural
+        f"{keyword}ed",  # Past tense
+        f"{keyword}ing"  # Present participle
+    ])
+    
+    # Combine and deduplicate
+    similar_words = sorted(synonyms.union(variations))
+    return similar_words

@@ -1,14 +1,10 @@
 import streamlit as st
 import os
-import matplotlib.pyplot as plt
 
 from utils.pipeline import prepare_data_pipeline, sentiment_analysis_pipeline, topic_modeling_pipeline, trending_topic_pipeline
 
 # Linda
 from utils.clean_data import generate_similar_words
-
-# Import your pipeline function
-# from your_pipeline_module import pipeline  # Uncomment and replace with your actual import
 
 # Function to list subreddit files
 def list_subreddit_files(folder: str) -> list:

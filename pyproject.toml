@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "northwestern-university-reddit-sentiment-analysis"
+version = "0.1.0"
+description = ""
+authors = ["Jakob Kuemmerle <JakobKuemmerle@u.northwestern.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+matplotlib = "^3.9.3"
+seaborn = "^0.13.2"
+pandas = "^2.2.3"
+zstandard = "^0.23.0"
+textblob = "^0.18.0.post0"
+streamlit = "^1.40.2"
+scikit-learn = "^1.5.2"
+nltk = "^3.9.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

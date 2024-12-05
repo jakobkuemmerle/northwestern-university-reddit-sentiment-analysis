@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import logging
 from datetime import datetime
+import re
 
 
 # Set up logging
@@ -56,4 +57,10 @@ def load_reddit_data(file_path):
         except (KeyError, json.JSONDecodeError) as err:
             bad_lines += 1
     log.info(f"Data loading complete with {len(data):,} rows and {bad_lines:,} bad lines.")
-    return pd.DataFrame(data)
+    
+    df = pd.DataFrame(data)
+    if 'northwestern' not in file_path.lower():
+        NU_keywords = r'\b(Northwestern|NU|wildcat|wildcats)\b'  # Regular expression for the keywords
+        df = df[df['selftext'].str.contains(NU_keywords, flags=re.IGNORECASE, na=False)]
+
+    return df

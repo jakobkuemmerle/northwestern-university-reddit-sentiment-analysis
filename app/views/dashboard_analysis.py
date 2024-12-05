@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 
 from utils.pipeline import prepare_data_pipeline, sentiment_analysis_pipeline, topic_modeling_pipeline, trending_topic_pipeline
 
+# Linda
+from utils.clean_data import generate_similar_words
+
 # Import your pipeline function
 # from your_pipeline_module import pipeline  # Uncomment and replace with your actual import
 
@@ -60,7 +63,10 @@ if st.button("Analyze"):
             # Assuming pipeline returns a list of plots
             file_path = 'downloads/reddit-downloads/Northwestern_submissions.zst'
             min_chars = 100
-            keywords = ["northwestern", "NU"]
+            
+            # Linda
+            # keywords = ["northwestern", "NU"]
+            keywords = generate_similar_words(keyword)
             
             result_df, plot_fig = prepare_data_pipeline(subreddit_path, min_chars, keywords, start_year, end_year)
             st.pyplot(plot_fig)

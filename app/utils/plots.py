@@ -57,10 +57,11 @@ def plot_trends(topic_trends: pd.DataFrame) -> plt.Figure:
     ax.set_title('Topic Trends Over Time', fontsize=16)
     ax.set_xlabel('Year', fontsize=14)
     ax.set_ylabel('Number of Posts', fontsize=14)
-    ax.legend(title='Topics', fontsize=12)
+    ax.legend(title='Topics', labels=topic_trends.columns, fontsize=12)  # Explicitly set labels
     ax.grid(True)
     fig.tight_layout()
     return fig
+
 
 def plot_spikes(spikes: pd.DataFrame) -> plt.Figure:
     """

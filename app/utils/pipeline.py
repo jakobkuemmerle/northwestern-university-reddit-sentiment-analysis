@@ -77,16 +77,17 @@ def topic_modeling_pipeline(
     for topic, words in summarized_topics.items():
         print(f"{topic}: {words}")
     
-    # Get cluster descriptions
-    cluster_descriptions = get_cluster_descriptions(df, lda, vectorizer, n_top_words, n_examples)
-    print("\nCluster Descriptions:")
-    for topic, details in cluster_descriptions.items():
-        print(f"{topic} - Top Words: {', '.join(details['Top Words'])}")
-        for idx, example in enumerate(details['Example Posts']):
-            print(f"Example {idx + 1}: {example[:200]}...")  # Print first 200 chars for readability
+    # Map integer topic numbers to their descriptive labels
+    topic_labels = {i + 1: summary for i, (topic, summary) in enumerate(summarized_topics.items())}
 
     # Analyze trends over time
     topic_trends = analyze_topics_over_time(df, topic_assignments)
+
+    # Replace numeric topic labels with summarized descriptions in trends
+    topic_trends = topic_trends.rename(columns=topic_labels)
+
+    print("Updated Topic Trends with Descriptive Labels:")
+    print(topic_trends.head())
 
     # Plot topic trends
     fig1 = plot_trends(topic_trends)
@@ -94,6 +95,9 @@ def topic_modeling_pipeline(
     # Detect and plot spikes
     overall_trends = df.groupby('year').size()
     spikes = detect_spikes(topic_trends, overall_trends)
+
+    # Replace numeric topic labels with summarized descriptions in spikes
+    spikes = spikes.rename(columns=topic_labels)
     print("Detected Spikes in Topics:")
     print(spikes)
     fig2 = plot_spikes(spikes)

@@ -5,7 +5,7 @@ from utils.clean_data import filter_data, preprocess_text
 from utils.plots import plot_posts_per_year, plot_sentiment_distribution, plot_trends, plot_spikes
 from utils.analyze_clusters import perform_lda, display_topics, analyze_topics_over_time, detect_spikes, get_cluster_descriptions, get_trending_topic
 from utils.analyze_sentiment import assign_sentiments, calculate_sentiment_distribution
-
+from utils.api import generate_summary_for_topics
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
@@ -72,9 +72,10 @@ def topic_modeling_pipeline(
     
     # Display topics
     topics = display_topics(lda, vectorizer.get_feature_names_out(), n_top_words)
+    summarized_topics = generate_summary_for_topics(topics)
     print("Identified Topics:")
-    for topic, words in topics.items():
-        print(f"{topic}: {', '.join(words)}")
+    for topic, words in summarized_topics.items():
+        print(f"{topic}: {words}")
     
     # Get cluster descriptions
     cluster_descriptions = get_cluster_descriptions(df, lda, vectorizer, n_top_words, n_examples)

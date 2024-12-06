@@ -5,6 +5,8 @@ import pandas as pd
 import logging
 from datetime import datetime
 import re
+import praw
+from dotenv import load_dotenv
 
 
 # Set up logging
@@ -64,3 +66,84 @@ def load_reddit_data(file_path):
         df = df[df['selftext'].str.contains(NU_keywords, flags=re.IGNORECASE, na=False)]
 
     return df
+
+def get_api_data(subreddit_name, search_keyword, limit=1000):
+    """
+    Function to fetch Reddit posts from a given subreddit based on a search keyword.
+
+    Parameters:
+    - subreddit_name (str): The name of the subreddit to search in.
+    - search_keyword (str): The keyword to search for in the subreddit.
+    - limit (int, optional): The maximum number of posts to fetch. Default is 1000.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing post data (Title, Score, URL, Created, Subreddit, Text).
+    """
+    # Load environment variables
+    load_dotenv()
+
+    # Set up Reddit API client
+    reddit = praw.Reddit(
+        client_id=os.environ.get("REDDIT_CLIENT_ID"),
+        client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
+        user_agent='your_user_agent'
+    )
+
+    # Search for posts in the specified subreddit with the given keyword
+    posts = reddit.subreddit(subreddit_name).search(search_keyword, sort='relevance', limit=limit)
+
+    # Create an empty list to store post data
+    post_data = []
+
+    # Extract relevant data from each post
+    for post in posts:
+        post_data.append({
+            'Title': post.title,
+            'Score': post.score,
+            'URL': post.url,
+            'Created': post.created_utc,
+            'Subreddit': post.subreddit.display_name,
+            'Text': post.selftext
+        })
+
+    # Convert the list of post data to a DataFrame
+    return pd.DataFrame(post_data)
+
+def get_all_subreddits(limit=1000, keyword=None):
+    """
+    Fetches a list of subreddits, optionally filtered by a keyword.
+
+    Parameters:
+    - limit (int): The maximum number of subreddits to fetch. Default is 1000.
+    - keyword (str, optional): A keyword to filter subreddits by their name or description.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing subreddit names, subscribers, and descriptions.
+    """
+    # Load environment variables
+    load_dotenv()
+
+    # Set up Reddit API client
+    reddit = praw.Reddit(
+        client_id=os.environ.get("REDDIT_CLIENT_ID"),
+        client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
+        user_agent='your_user_agent'
+    )
+
+    # Initialize the subreddit search
+    if keyword:
+        subreddits = reddit.subreddits.search_by_name(keyword, include_nsfw=False)
+    else:
+        subreddits = reddit.subreddits.default(limit=limit)
+
+    # Collect subreddit data
+    subreddit_data = []
+    for subreddit in subreddits:
+        subreddit_data.append({
+            'Name': subreddit.display_name,
+            'Subscribers': subreddit.subscribers,
+            'Description': subreddit.public_description
+        })
+
+    # Convert the list of subreddit data to a DataFrame
+    return pd.DataFrame(subreddit_data)

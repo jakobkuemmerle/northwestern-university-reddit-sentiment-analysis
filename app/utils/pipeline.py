@@ -3,7 +3,7 @@ import pandas as pd
 from utils.read_data import load_reddit_data
 from utils.clean_data import filter_data, preprocess_text
 from utils.plots import plot_posts_per_year, plot_sentiment_distribution, plot_trends, plot_spikes
-from utils.analyze_clusters import perform_lda, display_topics, analyze_topics_over_time, detect_spikes, get_cluster_descriptions, get_trending_topic
+from utils.analyze_clusters import perform_lda, display_topics, analyze_topics_over_time, detect_spikes, get_trending_topic
 from utils.analyze_sentiment import assign_sentiments, calculate_sentiment_distribution
 from utils.api import generate_summary_for_topics
 from sklearn.feature_extraction.text import CountVectorizer
@@ -15,7 +15,7 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 # Main pipeline function
-def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, end_year=None):
+def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, end_year=None, fig="Yes"):
     log.info("Starting Reddit Data Analysis...")
     
     # Step 1: Load data
@@ -25,9 +25,11 @@ def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, 
     filtered_df = filter_data(df, min_chars, keywords, start_year, end_year)
     
     # Step 3: Generate plot
-    fig = plot_posts_per_year(filtered_df)
-    
-    return filtered_df, fig
+    if fig=="Yes":
+        fig = plot_posts_per_year(filtered_df)
+        return filtered_df, fig
+    else:
+        return filtered_df
 
 def sentiment_analysis_pipeline(submissions_df):
     """
@@ -77,16 +79,14 @@ def topic_modeling_pipeline(
     for topic, words in summarized_topics.items():
         print(f"{topic}: {words}")
     
-    # Get cluster descriptions
-    cluster_descriptions = get_cluster_descriptions(df, lda, vectorizer, n_top_words, n_examples)
-    print("\nCluster Descriptions:")
-    for topic, details in cluster_descriptions.items():
-        print(f"{topic} - Top Words: {', '.join(details['Top Words'])}")
-        for idx, example in enumerate(details['Example Posts']):
-            print(f"Example {idx + 1}: {example[:200]}...")  # Print first 200 chars for readability
+    # Map integer topic numbers to their descriptive labels
+    topic_labels = {i + 1: summary for i, (topic, summary) in enumerate(summarized_topics.items())}
 
     # Analyze trends over time
     topic_trends = analyze_topics_over_time(df, topic_assignments)
+
+    # Replace numeric topic labels with summarized descriptions in trends
+    topic_trends = topic_trends.rename(columns=topic_labels)
 
     # Plot topic trends
     fig1 = plot_trends(topic_trends)
@@ -94,8 +94,9 @@ def topic_modeling_pipeline(
     # Detect and plot spikes
     overall_trends = df.groupby('year').size()
     spikes = detect_spikes(topic_trends, overall_trends)
-    print("Detected Spikes in Topics:")
-    print(spikes)
+
+    # Replace numeric topic labels with summarized descriptions in spikes
+    spikes = spikes.rename(columns=topic_labels)
     fig2 = plot_spikes(spikes)
 
     return fig1, fig2
@@ -134,11 +135,5 @@ def trending_topic_pipeline(
 
     # Call `get_trending_topic` for the specified month and year
     trending_topic, top_words = get_trending_topic(df, lda, vectorizer, year, month)
-
-    if trending_topic is not None:
-        print(f"Trending Topic for {year}-{month:02d}: Topic {trending_topic}")
-        print(f"Top words for Topic {trending_topic}: {', '.join(top_words)}")
-    else:
-        print(f"No data available for {year}-{month:02d}.")
 
     return trending_topic

@@ -1,24 +1,36 @@
 import streamlit as st
 import os
-import matplotlib.pyplot as plt
 
 from utils.pipeline import prepare_data_pipeline, sentiment_analysis_pipeline, topic_modeling_pipeline, trending_topic_pipeline
-
-# Linda
 from utils.clean_data import generate_similar_words
-
-# Import your pipeline function
-# from your_pipeline_module import pipeline  # Uncomment and replace with your actual import
 
 # Function to list subreddit files
 def list_subreddit_files(folder: str) -> list:
     """Lists subreddit files in the specified folder."""
     return [file for file in os.listdir(folder) if file.endswith('.zst')]
 
-# Define the Streamlit app
+# Initialize session state for role selection
+if "role" not in st.session_state:
+    st.session_state["role"] = "user"  # Default role is 'user'
+
+# Sidebar for role selection
+st.sidebar.title("Role Selection")
+previous_role = st.session_state["role"]  # Store the previous role
+selected_role = st.sidebar.selectbox(
+    "Choose your role:",
+    options=["user", "special"],
+    index=["user", "special"].index(st.session_state["role"]),  # Use the current role as default
+)
+
+st.sidebar.image("assets/images/nu.jpeg", caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto", use_container_width=False)
+
+# Update the role and trigger rerun if it changes
+if selected_role != previous_role:
+    st.session_state["role"] = selected_role
+    st.rerun()
 
 # Title and subtitle
-st.title("Reddit Analysis Dashboard for Northwestern")
+st.title("Trend Analysis Dashboard for Northwestern")
 st.subheader("Explore subreddit trends and insights related to NU")
 
 # Get the list of subreddit files
@@ -53,8 +65,8 @@ start_year, end_year = st.slider(
 
 # Analyze button
 if st.button("Analyze"):
-    if selected_subreddit and keyword:
-        st.write(f"Analyzing {selected_subreddit} for keyword '{keyword}'...")
+    if selected_subreddit:
+        st.write(f"Analyzing {selected_subreddit} for keyword '{keyword if keyword else 'all keywords'}'...")
         
         # Call the pipeline function
         subreddit_path = os.path.join(folder_path, f"{selected_subreddit}_submissions.zst")
@@ -78,18 +90,9 @@ if st.button("Analyze"):
             st.pyplot(plot_fig3)
             st.pyplot(plot_fig4)
 
-            trending_topic = trending_topic_pipeline(result_df, year=2020, month=9)
-            st.write(trending_topic)
-
-            # result_plots = pipeline(subreddit_path, keyword)
-            
-            # Display the plots
-            #for plot in result_plots:
-            #    st.pyplot(plot)
-
-            st.write("Analysis completed. Try again with a new keyboard or check out the other features")
+            st.write("Analysis completed. Try again with a new keyword or subreddit.")
 
         except Exception as e:
             st.error(f"An error occurred during analysis: {e}")
     else:
-        st.warning("Please select a subreddit and enter a keyword to proceed.")
+        st.warning("Please select a subreddit to proceed.")

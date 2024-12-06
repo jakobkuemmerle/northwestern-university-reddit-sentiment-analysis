@@ -1,12 +1,11 @@
 import logging
 import pandas as pd
-from utils.read_data import load_reddit_data, get_api_data
+from utils.read_data import load_reddit_data
 from utils.clean_data import filter_data, preprocess_text
 from utils.plots import plot_posts_per_year, plot_sentiment_distribution, plot_trends, plot_spikes
-from utils.analyze_clusters import perform_lda, display_topics, analyze_topics_over_time, detect_spikes, get_cluster_descriptions, get_trending_topic
+from utils.analyze_clusters import perform_lda, display_topics, analyze_topics_over_time, detect_spikes, get_trending_topic
 from utils.analyze_sentiment import assign_sentiments, calculate_sentiment_distribution
 from utils.api import generate_summary_for_topics
-from utils.summarize import summarize_first_row, sentiment_analysis_by_paragraph
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
@@ -147,12 +146,3 @@ def trending_topic_pipeline(
         print(f"No data available for {year}-{month:02d}.")
 
     return trending_topic
-
-def summarize_pipeline(selected_subreddit, keyword, limit=1000):
-    """
-    Full pipeline to summarize a certain post and perform sentiment analysis.
-    """
-    df = get_api_data(selected_subreddit, keyword, limit=1000)
-    summary = summarize_first_row(df)
-    fig = sentiment_analysis_by_paragraph(df)
-    return summary, fig

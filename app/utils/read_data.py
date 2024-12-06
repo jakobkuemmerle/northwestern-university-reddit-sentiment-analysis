@@ -108,3 +108,42 @@ def get_api_data(subreddit_name, search_keyword, limit=1000):
 
     # Convert the list of post data to a DataFrame
     return pd.DataFrame(post_data)
+
+def get_all_subreddits(limit=1000, keyword=None):
+    """
+    Fetches a list of subreddits, optionally filtered by a keyword.
+
+    Parameters:
+    - limit (int): The maximum number of subreddits to fetch. Default is 1000.
+    - keyword (str, optional): A keyword to filter subreddits by their name or description.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing subreddit names, subscribers, and descriptions.
+    """
+    # Load environment variables
+    load_dotenv()
+
+    # Set up Reddit API client
+    reddit = praw.Reddit(
+        client_id=os.environ.get("REDDIT_CLIENT_ID"),
+        client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
+        user_agent='your_user_agent'
+    )
+
+    # Initialize the subreddit search
+    if keyword:
+        subreddits = reddit.subreddits.search_by_name(keyword, include_nsfw=False)
+    else:
+        subreddits = reddit.subreddits.default(limit=limit)
+
+    # Collect subreddit data
+    subreddit_data = []
+    for subreddit in subreddits:
+        subreddit_data.append({
+            'Name': subreddit.display_name,
+            'Subscribers': subreddit.subscribers,
+            'Description': subreddit.public_description
+        })
+
+    # Convert the list of subreddit data to a DataFrame
+    return pd.DataFrame(subreddit_data)

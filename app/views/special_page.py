@@ -1,10 +1,9 @@
 import streamlit as st
 import os
+import pandas as pd
 from transformers import pipeline
 import nltk
 
-from utils.pipeline import prepare_data_pipeline, sentiment_analysis_pipeline, topic_modeling_pipeline, trending_topic_pipeline, summarize_pipeline
-from utils.clean_data import generate_similar_words
 from utils.summarize import summarize_first_row
 from utils.read_data import get_api_data
 
@@ -71,25 +70,37 @@ def list_subreddit_files(folder: str) -> list:
     return [file for file in os.listdir(folder) if file.endswith('.zst')]
 
 # Define the Streamlit app
+# Load the CSV data
+file_path = "downloads/subreddit-list/top_text_subreddits.csv"
+subreddit_data = pd.read_csv(file_path)
+
+# Remove rows where 'subreddit' is NaN
+subreddit_data = subreddit_data.dropna(subset=['subreddit'])
 
 # Title and subtitle
 st.title("Special Analysis Dashboard for Staff")
-st.subheader("Summarize the most controversial posts of a given Category")
+st.subheader("Summarize the most controversial posts of a given Category - Select the Subreddit you like most.")
 
-# Get the list of subreddit files
-folder_path = "downloads/reddit-downloads"
-subreddits = list_subreddit_files(folder_path)
+# Input field for user query
+user_input = st.text_input("Search for a subreddit:", "")
 
-# Extract the part before the first underscore for each file
-subreddits = [file.split('_')[0] for file in subreddits]
+# Display suggestions if user input is provided
+if user_input:
+    # Filter subreddits that contain the user input (case-insensitive)
+    filtered_subreddits = subreddit_data[subreddit_data['subreddit'].str.contains(user_input, case=False, na='')]
 
-
-# Dropdown to select subreddit
-selected_subreddit = st.selectbox(
-    "Select a subreddit to analyze:",
-    options=subreddits,
-    help="Choose the subreddit data file you want to analyze."
-)
+    # Sort by COUNT and take the top 5
+    top_suggestions = filtered_subreddits.nlargest(5, 'COUNT')['subreddit'].tolist()
+    
+    if top_suggestions:
+        st.write("Suggestions:")
+        selected_subreddit = st.radio("", top_suggestions)
+        if selected_subreddit:
+            st.success(f"You selected: {selected_subreddit}")
+    else:
+        st.warning("No matching subreddits found.")
+else:
+    st.info("Type to search for subreddits.")
 
 # Text input for keyword
 keyword = st.text_input(

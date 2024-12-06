@@ -15,7 +15,7 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 # Main pipeline function
-def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, end_year=None):
+def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, end_year=None, fig="Yes"):
     log.info("Starting Reddit Data Analysis...")
     
     # Step 1: Load data
@@ -25,9 +25,11 @@ def prepare_data_pipeline(file_path, min_chars, keywords=None, start_year=None, 
     filtered_df = filter_data(df, min_chars, keywords, start_year, end_year)
     
     # Step 3: Generate plot
-    fig = plot_posts_per_year(filtered_df)
-    
-    return filtered_df, fig
+    if fig=="Yes":
+        fig = plot_posts_per_year(filtered_df)
+        return filtered_df, fig
+    else:
+        return filtered_df
 
 def sentiment_analysis_pipeline(submissions_df):
     """
@@ -86,9 +88,6 @@ def topic_modeling_pipeline(
     # Replace numeric topic labels with summarized descriptions in trends
     topic_trends = topic_trends.rename(columns=topic_labels)
 
-    print("Updated Topic Trends with Descriptive Labels:")
-    print(topic_trends.head())
-
     # Plot topic trends
     fig1 = plot_trends(topic_trends)
 
@@ -98,8 +97,6 @@ def topic_modeling_pipeline(
 
     # Replace numeric topic labels with summarized descriptions in spikes
     spikes = spikes.rename(columns=topic_labels)
-    print("Detected Spikes in Topics:")
-    print(spikes)
     fig2 = plot_spikes(spikes)
 
     return fig1, fig2
@@ -138,11 +135,5 @@ def trending_topic_pipeline(
 
     # Call `get_trending_topic` for the specified month and year
     trending_topic, top_words = get_trending_topic(df, lda, vectorizer, year, month)
-
-    if trending_topic is not None:
-        print(f"Trending Topic for {year}-{month:02d}: Topic {trending_topic}")
-        print(f"Top words for Topic {trending_topic}: {', '.join(top_words)}")
-    else:
-        print(f"No data available for {year}-{month:02d}.")
 
     return trending_topic

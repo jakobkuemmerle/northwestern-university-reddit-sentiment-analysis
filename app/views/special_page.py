@@ -7,6 +7,26 @@ import nltk
 from utils.summarize import summarize_first_row
 from utils.read_data import get_api_data
 
+# Initialize session state for role selection
+if "role" not in st.session_state:
+    st.session_state["role"] = "user"  # Default role is 'user'
+
+# Sidebar for role selection
+st.sidebar.title("Role Selection")
+previous_role = st.session_state["role"]  # Store the previous role
+selected_role = st.sidebar.selectbox(
+    "Choose your role:",
+    options=["user", "special"],
+    index=["user", "special"].index(st.session_state["role"]),  # Use the current role as default
+)
+
+st.sidebar.image("assets/images/controversial.png", caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto", use_container_width=False)
+
+# Update the role and trigger rerun if it changes
+if selected_role != previous_role:
+    st.session_state["role"] = selected_role
+    st.rerun()
+
 def sentiment_analysis_by_paragraph_streamlit(df):
     """
     Perform sentiment analysis on the highest-scored post and display it color-coded in Streamlit.
@@ -63,7 +83,6 @@ def sentiment_analysis_by_paragraph_streamlit(df):
     # Display the HTML content in Streamlit
     st.markdown(html_output, unsafe_allow_html=True)
 
-
 # Function to list subreddit files
 def list_subreddit_files(folder: str) -> list:
     """Lists subreddit files in the specified folder."""
@@ -73,13 +92,12 @@ def list_subreddit_files(folder: str) -> list:
 # Load the CSV data
 file_path = "downloads/subreddit-list/top_text_subreddits.csv"
 subreddit_data = pd.read_csv(file_path)
-
 # Remove rows where 'subreddit' is NaN
 subreddit_data = subreddit_data.dropna(subset=['subreddit'])
 
 # Title and subtitle
-st.title("Special Analysis Dashboard for Staff")
-st.subheader("Summarize the most controversial posts of a given Category - Select the Subreddit you like most.")
+st.title("Controversial Posts Analysis")
+st.subheader("Select a Subreddit & Keyword!")
 
 # Input field for user query
 user_input = st.text_input("Search for a subreddit:", "")
@@ -93,7 +111,6 @@ if user_input:
     top_suggestions = filtered_subreddits.nlargest(5, 'COUNT')['subreddit'].tolist()
     
     if top_suggestions:
-        st.write("Suggestions:")
         selected_subreddit = st.radio("", top_suggestions)
         if selected_subreddit:
             st.success(f"You selected: {selected_subreddit}")
@@ -112,20 +129,15 @@ if st.button("Find and Summarize"):
     if selected_subreddit and keyword:
         st.write(f"Analyzing subreddit '{selected_subreddit}' for keyword '{keyword}'...")
 
-        # Define folder path
-        folder_path = "downloads/reddit-downloads"
-
-        # Generate file path
-        subreddit_path = os.path.join(folder_path, f"{selected_subreddit}_submissions.zst")
-
         try:
             # Call the pipeline function
             df = get_api_data(selected_subreddit, keyword, limit=1000)
 
             # Summarize and analyze
             summary = summarize_first_row(df)
+            st.header("Analysis Results:")
             st.subheader("Summarization of the Most Controversial Post:")
-            st.write(summary)
+            st.write(f"**{summary}**")
 
             st.subheader("Sentiment Analysis by Paragraph (Color-Coded):")
             sentiment_analysis_by_paragraph_streamlit(df)
